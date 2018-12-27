@@ -1,6 +1,7 @@
 #include "placeholder.hpp"
 
 ACTION placeholder::lock(const name user, const asset quantity, const uint32_t locked_until) {
+  require_auth(_self);
   free_balance_sub(quantity);
   add_balance(user, quantity, locked_until);
   life_insurance();
@@ -21,6 +22,7 @@ ACTION placeholder::withdraw(const name user, const asset quantity) {
 }
 
 void placeholder::delegate(const name user, const asset value) {
+  require_auth(_self);
   free_balance_sub(value);
   
   auto user_it = delegations.find(user.value);      
@@ -39,6 +41,7 @@ void placeholder::delegate(const name user, const asset value) {
 }
 
 ACTION placeholder::undelegate(const name user, const asset value) {
+  require_auth(_self);
   free_balance_add(value);
   
   const auto& user_balance = delegations.get(user.value, "User has no balance");
