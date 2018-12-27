@@ -1,4 +1,4 @@
-#include <priveos-placeholder.hpp>
+#include "placeholder.hpp"
 
 ACTION placeholder::prepare(const name user, const uint32_t locked_until) {
   require_auth(_self);
@@ -33,7 +33,7 @@ void placeholder::transfer(const name from, const name to, const asset quantity,
   eosio_assert(quantity.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
 
   auto bal = free_balance_singleton.get_or_default(
-    free_balance{
+    freebal {
       .funds = asset{0, priveos_symbol}
     }
   );

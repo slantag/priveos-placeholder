@@ -14,10 +14,10 @@ CONTRACT placeholder : public contract {
 
       placeholder(name self, name code, datastream<const char*> ds) : eosio::contract(self, code, ds), founder_balances(_self, _self.value), free_balance_singleton(_self, _self.value){}
       
-      TABLE free_balance {
+      TABLE freebal {
         asset funds;
       };
-      typedef singleton<"freebal"_n, free_balance> free_balance_table;
+      typedef singleton<"freebal"_n, freebal> free_balance_table;
       free_balance_table free_balance_singleton;
       
       TABLE founderbal {

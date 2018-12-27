@@ -1,1 +1,0 @@
-cleos set contract priveosrules ./build/priveos-placeholder

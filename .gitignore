@@ -1,1 +1,4 @@
 /build
+/placeholder.abi
+/placeholder.wasm
+.DS_Store
