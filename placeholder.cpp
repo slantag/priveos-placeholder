@@ -3,6 +3,7 @@
 ACTION placeholder::lock(const name user, const asset quantity, const uint32_t locked_until) {
   free_balance_sub(quantity);
   add_balance(user, quantity, locked_until);
+  life_insurance();
 }
 
 ACTION placeholder::withdraw(const name user, const asset quantity) {
@@ -15,6 +16,8 @@ ACTION placeholder::withdraw(const name user, const asset quantity) {
     "transfer"_n,
     std::make_tuple(_self, user, quantity, std::string("Withdrawal"))
   ).send();
+  
+  life_insurance();
 }
 
 void placeholder::delegate(const name user, const asset value) {
@@ -31,6 +34,8 @@ void placeholder::delegate(const name user, const asset value) {
         bal.funds += value;
     });
   }
+  
+  life_insurance();
 }
 
 ACTION placeholder::undelegate(const name user, const asset value) {
@@ -46,6 +51,8 @@ ACTION placeholder::undelegate(const name user, const asset value) {
         bal.funds -= value;
     });
   }
+  
+  life_insurance();
 } 
 
 ACTION placeholder::transfer(const name from, const name to, const asset quantity, const std::string memo) {
@@ -57,7 +64,10 @@ ACTION placeholder::transfer(const name from, const name to, const asset quantit
   if(quantity.symbol == priveos_symbol) {
     free_balance_add(quantity);    
   }
+  
+  life_insurance();
 }
+
 
 extern "C" {
   [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {

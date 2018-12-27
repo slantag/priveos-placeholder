@@ -1,6 +1,7 @@
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/asset.hpp>
 #include <eosiolib/singleton.hpp>
+#include "eosio.token.hpp"
 
 using namespace eosio;
 
@@ -9,8 +10,8 @@ CONTRACT placeholder : public contract {
    public:
       using contract::contract;
       
-      constexpr static symbol priveos_symbol{"PRIVEOS", 4};
-      constexpr static name priveos_token_contract{"priveostoken"};
+      static constexpr symbol priveos_symbol{"PRIVEOS", 4};
+      static constexpr name priveos_token_contract{"priveostoken"};
 
       placeholder(name self, name code, datastream<const char*> ds) : eosio::contract(self, code, ds), founder_balances(_self, _self.value), free_balance_singleton(_self, _self.value), delegations(_self, _self.value){}
       
@@ -62,7 +63,7 @@ CONTRACT placeholder : public contract {
         const name user, 
         const asset value
       );
-    
+          
     private:
       
       void add_balance(const name user, const asset value, const uint32_t locked_until) {
@@ -116,7 +117,22 @@ CONTRACT placeholder : public contract {
         free_balance_singleton.set(bal, _self);
       }  
       
-      
+      void life_insurance() {
+        const auto total_balance = eosio::token::get_balance(priveos_token_contract, get_self(), priveos_symbol.code());
+        const auto free_balance = free_balance_singleton.get().funds;
+        
+        asset founders{0, priveos_symbol};
+        for(const auto& x: founder_balances) {
+          founders += x.funds;
+        }
+        
+        asset delegated{0, priveos_symbol};
+        for(const auto& x: delegations) {
+          delegated += x.funds;
+        }
+        
+        eosio_assert(free_balance + founders + delegated == total_balance, "Inconsistent balances");
+      }
       
       
 };
