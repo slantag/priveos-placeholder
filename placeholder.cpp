@@ -1,48 +1,64 @@
 #include "placeholder.hpp"
 
-ACTION placeholder::prepare(const name user, const uint32_t locked_until) {
-  require_auth(_self);
-  auto it = founder_balances.find(user.value);
-  if(it == founder_balances.end()) {
-    founder_balances.emplace(user, [&](auto& bal){
-        bal.founder = user;
-        bal.funds = asset{0, priveos_symbol};
-        bal.locked_until = locked_until;
-    });
-  }
+ACTION placeholder::lock(const name user, const asset quantity, const uint32_t locked_until) {
+  free_balance_sub(quantity);
+  add_balance(user, quantity, locked_until);
 }
 
-ACTION placeholder::withdraw(const name user, const asset funds) {
+ACTION placeholder::withdraw(const name user, const asset quantity) {
   require_auth(user);
-  sub_balance(user, funds);
+  sub_balance(user, quantity);
   
   action(
     permission_level{_self, "active"_n},
     priveos_token_contract,
     "transfer"_n,
-    std::make_tuple(_self, user, funds, std::string("Withdrawal"))
+    std::make_tuple(_self, user, quantity, std::string("Withdrawal"))
   ).send();
 }
 
-void placeholder::transfer(const name from, const name to, const asset quantity, const std::string memo) {
+void placeholder::delegate(const name user, const asset value) {
+  free_balance_sub(value);
+  
+  auto user_it = delegations.find(user.value);      
+  if(user_it == delegations.end()) {
+    delegations.emplace(_self, [&](auto& bal){
+        bal.user = user;
+        bal.funds = value;
+    });
+  } else {
+    delegations.modify(user_it, _self, [&](auto& bal){
+        bal.funds += value;
+    });
+  }
+}
+
+ACTION placeholder::undelegate(const name user, const asset value) {
+  free_balance_add(value);
+  
+  const auto& user_balance = delegations.get(user.value, "User has no balance");
+  eosio_assert(user_balance.funds >= value, "Overdrawn balance");
+  
+  if(user_balance.funds == value) {
+    delegations.erase(user_balance);
+  } else {
+    delegations.modify(user_balance, user, [&](auto& bal){
+        bal.funds -= value;
+    });
+  }
+} 
+
+ACTION placeholder::transfer(const name from, const name to, const asset quantity, const std::string memo) {
   // only respond to incoming transfers
   if (from == _self || to != _self) {
     return;
   }
   eosio_assert(quantity.amount > 0, "Deposit amount must be > 0");
-  eosio_assert(quantity.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
-
-  auto bal = free_balance_singleton.get_or_default(
-    freebal {
-      .funds = asset{0, priveos_symbol}
-    }
-  );
-
-  bal.funds += quantity;
-  free_balance_singleton.set(bal, _self);
+  if(quantity.symbol == priveos_symbol) {
+    free_balance_add(quantity);    
+  }
 }
 
-// EOSIO_DISPATCH(placeholder, (prepare))
 extern "C" {
   [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     if (action == "transfer"_n.value && code == placeholder::priveos_token_contract.value) {
@@ -51,7 +67,7 @@ extern "C" {
 
     if (code == receiver) {
       switch (action) { 
-        EOSIO_DISPATCH_HELPER( placeholder, (prepare) ) 
+        EOSIO_DISPATCH_HELPER( placeholder, (lock)(withdraw)(delegate)(undelegate) ) 
       }    
     }
 
