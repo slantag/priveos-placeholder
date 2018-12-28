@@ -134,6 +134,29 @@ CONTRACT placeholder : public contract {
           delegated += x.funds;
         }
         
+        /**
+          * Make sure the tracked funds match up with the total amount of 
+          * privEOS tokens that are deposited. The idea is that the privEOS tokens
+          * that are deposited in this DAC contract can belong to either category:
+          * 1) Founder Balances
+          *    These funds are permanent tokens that belong to
+          *    the founders that are locked in until a date in the future. These
+          *    tokens count towards the owner's percentage in DAC revenue payout
+          *    calculations.
+          * 2) Delegations
+          *    Tokens of the non-permanent/delegated form that are
+          *    delegated to somebody like the DAC service company or BPs. These
+          *    tokens count towards the delegatee's percentage in DAC revenue
+          *    payout calculations. Unlike permanent tokens, the delegatee only 
+          *    has a claim to the revenue payout for as long as those tokens are
+          *    delegated to them. The DAC can undelegate any time when certain
+          *    conditions are met (non-compliance of BP etc.).
+          * 3) Free balance
+          *    Tokens that have been deposited into the contract but have
+          *    not yet been assigned to any of the above categories.
+          *    In the very beginning, the DAC will have a free balance of 
+          *    600 PRIVEOS reserved to be delegated to the participating BPs.
+          */
         eosio_assert(free_balance + founders + delegated == total_balance, "Inconsistent balances");
       }
       
