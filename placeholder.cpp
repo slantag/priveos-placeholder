@@ -63,7 +63,10 @@ ACTION placeholder::transfer(const name from, const name to, const asset quantit
   if (from == _self || to != _self) {
     return;
   }
+  eosio_assert(quantity.is_valid(), "Are you trying to corrupt me?");
   eosio_assert(quantity.amount > 0, "Deposit amount must be > 0");
+  eosio_assert(get_code() == priveos_token_contract, "This transfer notification should only handle notifications from the priveos token contract");
+  
   if(quantity.symbol == priveos_symbol) {
     free_balance_add(quantity);    
   }

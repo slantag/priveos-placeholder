@@ -67,6 +67,8 @@ CONTRACT placeholder : public contract {
     private:
       
       void add_balance(const name user, const asset value, const uint32_t locked_until) {
+        eosio_assert(value.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
+
         auto user_it = founder_balances.find(user.value);      
         if(user_it == founder_balances.end()) {
           founder_balances.emplace(_self, [&](auto& bal){
@@ -84,6 +86,7 @@ CONTRACT placeholder : public contract {
       }
     
       void sub_balance(const name user, const asset value) {
+        eosio_assert(value.symbol == priveos_symbol, "Only PRIVEOS tokens allowed");
         const auto& user_balance = founder_balances.get(user.value, "User has no balance");
         eosio_assert(user_balance.locked_until < now(), "Funds have not yet become unlocked");
         eosio_assert(user_balance.funds >= value, "Overdrawn balance");
