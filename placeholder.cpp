@@ -4,7 +4,7 @@ ACTION placeholder::lock(const name user, const asset quantity, const uint32_t l
   require_auth(_self);
   free_balance_sub(quantity);
   add_balance(user, quantity, locked_until);
-  life_insurance();
+  consistency_check();
 }
 
 ACTION placeholder::withdraw(const name user, const asset quantity) {
@@ -17,8 +17,11 @@ ACTION placeholder::withdraw(const name user, const asset quantity) {
     "transfer"_n,
     std::make_tuple(_self, user, quantity, std::string("Withdrawal"))
   ).send();
-  
-  life_insurance();
+
+  /**
+    * It's not possible to see the effects of this inline action within
+    * the same transaction, so we can't call consistency_check here. 
+    */
 }
 
 void placeholder::delegate(const name user, const asset value) {
@@ -37,7 +40,7 @@ void placeholder::delegate(const name user, const asset value) {
     });
   }
   
-  life_insurance();
+  consistency_check();
 }
 
 ACTION placeholder::undelegate(const name user, const asset value) {
@@ -55,7 +58,7 @@ ACTION placeholder::undelegate(const name user, const asset value) {
     });
   }
   
-  life_insurance();
+  consistency_check();
 } 
 
 ACTION placeholder::transfer(const name from, const name to, const asset quantity, const std::string memo) {
@@ -71,9 +74,8 @@ ACTION placeholder::transfer(const name from, const name to, const asset quantit
     free_balance_add(quantity);    
   }
   
-  life_insurance();
+  consistency_check();
 }
-
 
 extern "C" {
   [[noreturn]] void apply(uint64_t receiver, uint64_t code, uint64_t action) {

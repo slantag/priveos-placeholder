@@ -120,7 +120,7 @@ CONTRACT placeholder : public contract {
         free_balance_singleton.set(bal, _self);
       }  
       
-      void life_insurance() {
+      void consistency_check() {
         const auto total_balance = eosio::token::get_balance(priveos_token_contract, get_self(), priveos_symbol.code());
         const auto free_balance = free_balance_singleton.get().funds;
         
